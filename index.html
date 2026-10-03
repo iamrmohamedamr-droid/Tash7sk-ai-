@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     منصة التشخيص الطبي الذكية — الإصدار الاحترافي v3.0
+     ------------------------------------------------------------
+     بنية الملف:
+       1) CSS  : نظام تصميم كامل (ألوان، خطوط، مكوّنات، وضع ليلي، طباعة)
+       2) HTML : هيكل الصفحة (شريط علوي، واجهة رئيسية، نوافذ)
+       3) JS   : المنطق (بيانات، معالجة عربية، تشخيص، صوت، AI، سجل)
+     كل جزء مشروح بالعربي بجانب الكود.
+============================================================ -->
+<html lang="ar" dir="rtl"><!-- اللغة عربية والاتجاه من اليمين لليسار -->
+<head>
+<meta charset="UTF-8"><!-- ترميز يدعم الحروف العربية -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- ضبط العرض على الموبايل -->
+<meta name="theme-color" content="#0b6bcb"><!-- لون شريط المتصفح على الموبايل -->
+<title>منصة التشخيص الطبي الذكية</title>
+
+<!-- خط Cairo العربي من Google Fonts (لو غير متاح يُستخدم خط النظام تلقائياً) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   [1] متغيرات التصميم (Design Tokens)
+   تغيير أي لون من هنا يتغير في الموقع كله
+============================================================ */
+:root{
+  --bg:#f3f6fb;              /* خلفية الصفحة */
+  --surface:#ffffff;         /* خلفية البطاقات */
+  --surface-2:#f7f9fc;       /* خلفية ثانوية (حقول، أقسام) */
+  --border:#e3e9f2;          /* لون الحدود */
+  --text:#0f1f38;            /* لون النص الأساسي */
+  --muted:#5f7089;           /* نص ثانوي */
+  --primary:#0b6bcb;         /* اللون الرئيسي (أزرق طبي) */
+  --primary-600:#0956a5;     /* أزرق أغمق للتفاعل */
+  --teal:#0fb5a8;            /* لون مساعد (تركواز) */
+  --green:#16a34a;           /* نجاح / ثقة عالية */
+  --amber:#d97706;           /* تحذير / ثقة متوسطة */
+  --red:#dc2626;             /* خطر / طوارئ */
+  --purple:#7c3aed;          /* لون الذكاء الاصطناعي */
+  --grad:linear-gradient(135deg,#0b3d91 0%,#0b6bcb 55%,#0fb5a8 100%); /* التدرج الرئيسي */
+  --grad-soft:linear-gradient(135deg,rgba(11,107,203,.10),rgba(15,181,168,.10));
+  --shadow-sm:0 1px 2px rgba(15,31,56,.06);          /* ظل خفيف */
+  --shadow-md:0 8px 24px rgba(15,31,56,.08);         /* ظل متوسط */
+  --shadow-lg:0 20px 50px rgba(15,31,56,.14);        /* ظل كبير */
+  --radius:16px;             /* استدارة البطاقات */
+  --radius-sm:10px;          /* استدارة العناصر الصغيرة */
+}
+body.dark{ /* قيم الوضع الليلي: تتبدل عند إضافة class="dark" للـ body */
+  --bg:#0a1322; --surface:#111d33; --surface-2:#16253f; --border:#223253;
+  --text:#eaf1fb; --muted:#93a4bf; --primary:#4d9bff; --primary-600:#78b2ff;
+  --shadow-md:0 8px 24px rgba(0,0,0,.35); --shadow-lg:0 20px 50px rgba(0,0,0,.5);
+  --grad-soft:linear-gradient(135deg,rgba(77,155,255,.14),rgba(15,181,168,.12));
+}
+
+/* ============================================================
+   [2] إعدادات عامة
+============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}                       /* إلغاء الهوامش الافتراضية */
+html{scroll-behavior:smooth}                                       /* تمرير ناعم */
+body{
+  font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;         /* خط عربي احترافي */
+  background:var(--bg);color:var(--text);line-height:1.75;
+  min-height:100vh;transition:background .3s,color .3s;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit} /* توحيد الخط */
+button{cursor:pointer}
+:focus-visible{outline:3px solid rgba(11,107,203,.45);outline-offset:2px}        /* حلقة تركيز لإمكانية الوصول */
+::selection{background:var(--primary);color:#fff}                  /* لون تحديد النص */
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}} /* احترام من يفضّل تقليل الحركة */
+
+/* ============================================================
+   [3] الشريط العلوي (Navbar)
+============================================================ */
+.navbar{
+  position:sticky;top:0;z-index:100;                               /* ثابت أعلى الصفحة */
+  background:color-mix(in srgb,var(--surface) 85%,transparent);   /* زجاجي شبه شفاف */
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--border);
+}
+.nav-inner{max-width:1180px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)}
+.brand-logo{width:42px;height:42px;border-radius:12px;background:var(--grad);display:grid;place-items:center;box-shadow:var(--shadow-md)} /* مربع الشعار */
+.brand-name{font-weight:800;font-size:17px;line-height:1.2}
+.brand-name small{display:block;font-weight:600;font-size:11px;color:var(--muted)}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{ /* زر أيقونة دائري في الشريط */
+  width:42px;height:42px;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface);display:grid;place-items:center;font-size:18px;transition:.2s;
+}
+.icon-btn:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+
+/* ============================================================
+   [4] قسم الهيرو (الترحيب)
+============================================================ */
+.hero{background:var(--grad);color:#fff;position:relative;overflow:hidden}
+.hero::after{ /* دوائر زخرفية في الخلفية */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 15% 20%,rgba(255,255,255,.18),transparent 40%),
+             radial-gradient(circle at 85% 80%,rgba(255,255,255,.12),transparent 45%);
+}
+.hero-inner{max-width:1180px;margin:auto;padding:48px 20px 90px;position:relative;z-index:1;text-align:center}
+.hero h1{font-size:clamp(26px,4.5vw,42px);font-weight:800;line-height:1.35;margin-bottom:12px}
+.hero p{max-width:640px;margin:0 auto 22px;opacity:.92;font-size:clamp(14px,2vw,17px)}
+.badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.badge{ /* شارات الثقة */
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+  padding:7px 16px;border-radius:99px;font-size:13px;font-weight:600;backdrop-filter:blur(6px);
+}
+
+/* ============================================================
+   [5] الحاوية الرئيسية
+============================================================ */
+.page{max-width:1180px;margin:-56px auto 40px;padding:0 20px;position:relative;z-index:2} /* تتداخل مع الهيرو */
+
+.disclaimer{ /* شريط التنبيه الطبي */
+  display:flex;gap:12px;align-items:flex-start;background:var(--surface);
+  border:1px solid color-mix(in srgb,var(--amber) 40%,var(--border));
+  border-right:5px solid var(--amber);border-radius:var(--radius);
+  padding:14px 18px;font-size:13.5px;box-shadow:var(--shadow-md);margin-bottom:22px;
+}
+.disclaimer b{color:var(--amber)}
+
+/* شبكة العمل: عمودان (إدخال + نتيجة) */
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:900px){.workspace{grid-template-columns:1fr}} /* عمود واحد على الشاشات الصغيرة */
+
+/* البطاقة العامة */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:24px}
+.card-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;margin-bottom:4px}
+.card-sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex-shrink:0}
+
+/* حالة محرك التشخيص */
+.ai-status{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:18px;font-weight:600}
+.ai-status.local{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.ai-status.online{background:var(--grad-soft);color:var(--purple);border:1px solid rgba(124,58,237,.35)}
+.ai-status .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.ai-status.online .dot{background:var(--purple);box-shadow:0 0 10px var(--purple);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.5}}
+
+/* ============================================================
+   [6] النماذج والحقول
+============================================================ */
+.field-label{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;margin-bottom:8px}
+.field-label .hint{font-weight:400;font-size:12px;color:var(--muted)}
+.textarea-wrap{position:relative}                                   /* مرجع لتموضع مؤشرات الصوت */
+textarea{
+  width:100%;min-height:140px;padding:14px 16px;border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);background:var(--surface-2);resize:vertical;line-height:1.9;transition:.2s;
+}
+textarea:focus{outline:none;border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 4px rgba(11,107,203,.12)}
+textarea::placeholder{color:var(--muted)}
+.counter{font-size:11px;color:var(--muted);margin-top:4px;text-align:left}
+
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px} /* حقلان بجانب بعض */
+.input,.select{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface-2);transition:.2s;
+}
+.input:focus,.select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(11,107,203,.12)}
+
+/* أعراض سريعة (شرائح قابلة للضغط) */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{
+  padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);
+  font-size:12.5px;font-weight:600;color:var(--muted);transition:.18s;
+}
+.chip:hover{border-color:var(--primary);color:var(--primary);background:var(--grad-soft);transform:translateY(-1px)}
+
+/* أزرار أدوات مربع النص */
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{ /* زر ثانوي عام */
+  display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:13px;transition:.2s;
+}
+.btn:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1px)}
+.btn.danger{color:var(--red)}
+.btn.danger:hover{border-color:var(--red);color:var(--red)}
+.btn.mic{background:var(--grad);color:#fff;border:none}              /* زر الميكروفون */
+.btn.mic:hover{filter:brightness(1.08);color:#fff}
+.btn.mic.recording{background:linear-gradient(135deg,#dc2626,#f97316);animation:rec 1.5s infinite}
+.btn.mic:disabled{opacity:.6;cursor:wait;transform:none}
+@keyframes rec{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.55)}50%{box-shadow:0 0 0 12px rgba(220,38,38,0)}}
+
+/* صندوق رفع الصور */
+.upload{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:22px;text-align:center;color:var(--muted);background:var(--surface-2);cursor:pointer;transition:.2s}
+.upload:hover{border-color:var(--primary);color:var(--primary);background:var(--grad-soft)}
+.upload .ico{font-size:30px;display:block;margin-bottom:4px}
+.upload small{display:block;font-size:11.5px;margin-top:4px}
+#fileInput{display:none}
+.preview-wrap{display:none;margin-top:12px;position:relative;width:max-content}
+#preview{max-width:200px;max-height:200px;border-radius:12px;border:3px solid var(--primary);display:block}
+.remove-img{position:absolute;top:-8px;left:-8px;width:26px;height:26px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:13px}
+
+/* الزر الرئيسي: تحليل الحالة */
+.main-btn{
+  width:100%;margin-top:22px;padding:16px;font-size:17px;font-weight:800;color:#fff;border:none;
+  border-radius:14px;background:var(--grad);box-shadow:0 10px 24px rgba(11,107,203,.35);
+  display:flex;align-items:center;justify-content:center;gap:10px;transition:.25s;
+}
+.main-btn:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(11,107,203,.45)}
+.main-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.main-btn .spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:none}
+.main-btn.loading .spinner{display:block}
+.main-btn.loading .btn-icon{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.kbd-hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:8px}
+kbd{background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:11px}
+
+/* ============================================================
+   [7] لوحة النتائج
+============================================================ */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}   /* الحالة الفارغة قبل التحليل */
+.empty-state .big{font-size:56px;margin-bottom:10px;opacity:.85}
+.empty-state h3{color:var(--text);margin-bottom:6px}
+
+.result{display:none;animation:rise .45s ease}                          /* الصندوق يظهر بعد التحليل */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.report-head{ /* ترويسة التقرير: رقم + تاريخ */
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);
+  padding-bottom:12px;margin-bottom:14px;border-bottom:1px dashed var(--border);
+}
+.result-banner{ /* شريط عنوان النتيجة الملوّن */
+  display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;font-weight:800;font-size:17px;margin-bottom:16px;white-space:pre-line;
+}
+.result-banner.normal{background:rgba(22,163,74,.10);color:var(--green);border:1px solid rgba(22,163,74,.3)}
+.result-banner.danger{background:rgba(220,38,38,.10);color:var(--red);border:1px solid rgba(220,38,38,.35)}
+.result-banner.unknown{background:var(--surface-2);color:var(--muted);border:1px solid var(--border)}
+.result-banner.ai{background:var(--grad-soft);color:var(--purple);border:1px solid rgba(124,58,237,.35)}
+
+.patient-line{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.pill{background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 12px;font-size:12px;font-weight:600;color:var(--muted)}
+
+.section-h{font-size:13px;font-weight:800;color:var(--muted);margin:18px 0 10px;text-transform:none;display:flex;align-items:center;gap:6px}
+
+.disease{ /* بطاقة احتمال مرضي */
+  display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px;margin-bottom:10px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:12px;transition:.2s;
+}
+.disease:first-of-type{border-color:var(--primary);background:var(--grad-soft)}  /* أول احتمال مميز */
+.disease:hover{transform:translateX(-3px);border-color:var(--primary)}
+.disease .info b{display:block;font-size:15px}
+.disease .info small{color:var(--muted);font-size:12px}
+.ring{width:58px;height:58px;position:relative;flex-shrink:0}            /* دائرة نسبة الثقة */
+.ring svg{transform:rotate(-90deg)}
+.ring span{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:800}
+
+.sym-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sym-chip{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;background:var(--grad-soft);color:var(--primary);border:1px solid rgba(11,107,203,.25)}
+
+.meds{margin-top:16px;padding:16px;border-radius:12px;background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.28);border-right:5px solid var(--amber)}
+.meds h4{color:var(--amber);font-size:14.5px;margin-bottom:10px}
+.meds ul{list-style:none}
+.meds li{display:flex;gap:10px;padding:10px 12px;margin:6px 0;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:13px}
+.meds li::before{content:"💊";flex-shrink:0}
+.meds small.note{display:block;margin-top:10px;color:var(--amber);font-size:11.5px}
+
+.advice{margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--grad-soft);border-right:5px solid var(--primary);font-size:14px}
+.advice strong{color:var(--primary)}
+.dept{display:inline-block;margin-top:14px;padding:7px 16px;border-radius:99px;background:var(--grad);color:#fff;font-size:13px;font-weight:700}
+.conf-text{margin-right:10px;font-size:12px;color:var(--muted)}
+
+.ai-text{background:var(--surface-2);border:1px solid var(--border);padding:18px;border-radius:12px;line-height:2;font-size:14px;white-space:pre-wrap}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+/* ============================================================
+   [8] خطوات "كيف يعمل"
+============================================================ */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+@media(max-width:700px){.steps{grid-template-columns:1fr}}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;gap:14px;align-items:flex-start;box-shadow:var(--shadow-sm)}
+.step .ico{width:46px;height:46px;border-radius:12px;background:var(--grad-soft);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.step b{display:block;margin-bottom:2px}
+.step p{font-size:12.5px;color:var(--muted)}
+
+/* ============================================================
+   [9] سجل الفحوصات
+============================================================ */
+.history-list{max-height:260px;overflow-y:auto}
+.h-item{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);cursor:pointer;transition:.2s;font-size:12.5px}
+.h-item:hover{border-color:var(--primary);transform:translateX(-3px)}
+.h-item .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.h-item .txt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.h-item .time{color:var(--muted);font-size:11px;white-space:nowrap}
+.h-empty{text-align:center;color:var(--muted);padding:20px;font-size:13px}
+
+/* ============================================================
+   [10] النوافذ المنبثقة
+============================================================ */
+.modal-bg{position:fixed;inset:0;background:rgba(5,12,25,.6);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);position:relative}
+.modal h2{color:var(--primary);font-size:20px;margin-bottom:6px}
+.modal .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.modal label{display:block;margin:14px 0 6px;font-size:13px;font-weight:700}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+.modal-actions button{flex:1;padding:12px;border-radius:10px;border:none;font-weight:800;transition:.2s}
+.btn-primary{background:var(--grad);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--surface-2);border:1px solid var(--border)!important}
+.close-x{position:absolute;top:14px;left:14px;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted)}
+.info-box{margin-top:16px;padding:12px;background:var(--grad-soft);border-radius:10px;font-size:12px;line-height:1.8;color:var(--muted)}
+.help-card{padding:14px;border-radius:10px;margin-bottom:12px;background:var(--surface-2);font-size:13px;line-height:1.9}
+
+/* ============================================================
+   [11] الإشعارات المنبثقة (Toasts) بدل alert
+============================================================ */
+#toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10001;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(92vw,420px)}
+.toast{width:100%;padding:12px 18px;border-radius:12px;background:var(--text);color:var(--bg);font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);animation:rise .3s}
+.toast.error{background:var(--red);color:#fff}
+.toast.success{background:var(--green);color:#fff}
+
+/* ============================================================
+   [12] التذييل
+============================================================ */
+footer{max-width:1180px;margin:0 auto;padding:10px 20px 40px;text-align:center;color:var(--muted);font-size:12.5px}
+footer .emerg{display:inline-block;margin-top:8px;padding:6px 16px;border-radius:99px;background:rgba(220,38,38,.1);color:var(--red);font-weight:700}
+
+/* ============================================================
+   [13] الطباعة: نطبع التقرير فقط
+============================================================ */
+@media print{
+  body *{visibility:hidden}
+  #resultPanel,#resultPanel *{visibility:visible}
+  #resultPanel{position:absolute;inset:0;box-shadow:none;border:none}
+  .actions{display:none!important}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     [A] الشريط العلوي: الشعار + أزرار الوضع الليلي/الإعدادات/السجل
+============================================================ -->
+<header class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="#" aria-label="الصفحة الرئيسية">
+      <span class="brand-logo"><!-- شعار SVG: صليب طبي ونبض -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </span>
+      <span class="brand-name">منصة التشخيص الذكية<small>تقييم مبدئي بالذكاء الاصطناعي</small></span>
+    </a>
+    <div class="nav-actions">
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="الوضع الليلي" aria-label="تبديل الوضع الليلي">🌙</button>
+      <button class="icon-btn" onclick="openSettings()" title="إعدادات الذكاء الاصطناعي" aria-label="الإعدادات">⚙️</button>
+      <button class="icon-btn" onclick="openHistory()" title="سجل الفحوصات" aria-label="سجل الفحوصات">📋</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     [B] الهيرو: العنوان + شارات الثقة
+============================================================ -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>اوصف حالتك بصوتك أو كتابتك<br>واحصل على تقييم مبدئي فوري</h1>
+    <p>يفهم اللهجة المصرية والفصحى، ويقترح الاحتمالات والتخصص المناسب وعلامات الخطر — لمساعدتك على اتخاذ الخطوة الصحيحة.</p>
+    <div class="badges">
+      <span class="badge">🇪🇬 يفهم العامية المصرية</span>
+      <span class="badge">🎤 إدخال صوتي</span>
+      <span class="badge">🔒 البيانات تبقى في متصفحك</span>
+      <span class="badge">⚡ يعمل بدون إنترنت</span>
+    </div>
+  </div>
+</section>
+
+<main class="page">
+
+  <!-- [C] تنبيه طبي دائم الظهور -->
+  <div class="disclaimer" role="note">
+    <span style="font-size:22px">⚠️</span>
+    <div><b>تنبيه طبي:</b> هذه المنصة أداة استرشادية فقط ولا تُغني عن الفحص السريري أو استشارة الطبيب. لا تتناول أي دواء دون إشراف طبي، وفي الحالات الطارئة اتصل بالإسعاف <b>123</b>.</div>
+  </div>
+
+  <!-- ==========================================================
+       [D] مساحة العمل: عمود الإدخال + عمود النتائج
+  ========================================================== -->
+  <div class="workspace">
+
+    <!-- ===== عمود الإدخال ===== -->
+    <section class="card" aria-labelledby="inTitle">
+      <div class="card-title" id="inTitle"><span class="step-num">1</span> بيانات الحالة</div>
+      <p class="card-sub">كل ما كانت التفاصيل أدق كانت النتيجة أفضل.</p>
+
+      <!-- حالة المحرك (محلي / AI) -->
+      <div class="ai-status local" id="aiStatus"><span class="dot"></span><span id="aiStatusText">المحرك المحلي الذكي — بدون إنترنت</span></div>
+
+      <!-- مربع وصف الأعراض -->
+      <div class="field-label"><label for="symptoms">📝 وصف الأعراض</label><span class="hint">اكتب بالمصري أو الفصحى</span></div>
+      <div class="textarea-wrap">
+        <textarea id="symptoms" maxlength="1000" placeholder="مثال: نفوخي بيوجعني من امبارح، وجسمي حار، وبحس إني هترجع..."></textarea>
+      </div>
+      <div class="counter" id="charCount">0 / 1000</div>
+
+      <!-- أعراض سريعة: ضغطة وحدة تضيف العرض للنص -->
+      <div class="chips" id="quickChips" aria-label="أعراض شائعة"></div>
+
+      <!-- أزرار الأدوات -->
+      <div class="tools">
+        <button class="btn mic" id="micBtn" type="button">🎤 إدخال صوتي</button>
+        <button class="btn" type="button" onclick="insertExample()">✨ مثال</button>
+        <button class="btn danger" type="button" onclick="clearSymptoms()">🗑 مسح</button>
+      </div>
+
+      <!-- بيانات المريض الاختيارية (تحسّن دقة النتيجة وتأمين الأدوية للأطفال) -->
+      <div class="row-2">
+        <div>
+          <div class="field-label"><label for="age">العمر (اختياري)</label></div>
+          <input class="input" id="age" type="number" min="0" max="120" placeholder="مثال: 30">
+        </div>
+        <div>
+          <div class="field-label"><label for="gender">النوع (اختياري)</label></div>
+          <select class="select" id="gender">
+            <option value="">— غير محدد —</option>
+            <option value="ذكر">ذكر</option>
+            <option value="أنثى">أنثى</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- رفع الأشعة / التحاليل -->
+      <div class="field-label" style="margin-top:18px"><span>📎 الأشعة / التحاليل</span><span class="hint">اختياري</span></div>
+      <div class="upload" onclick="document.getElementById('fileInput').click()" role="button" tabindex="0">
+        <span class="ico">📁</span>
+        اضغط لرفع صورة أشعة أو تحليل
+        <small>PNG / JPG — حتى 5MB — تُرسل للـ AI فقط لو مفعّل</small>
+      </div>
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="preview-wrap" id="previewWrap">
+        <img id="preview" alt="معاينة الصورة المرفوعة">
+        <button class="remove-img" type="button" onclick="removeImage()" aria-label="حذف الصورة">✕</button>
+      </div>
+
+      <!-- زر التحليل -->
+      <button id="diagnoseBtn" class="main-btn" type="button">
+        <span class="spinner"></span><span class="btn-icon">🔍</span><span class="btn-text">تحليل الحالة</span>
+      </button>
+      <div class="kbd-hint">اختصار سريع: <kbd>Ctrl</kbd> + <kbd>Enter</kbd></div>
+    </section>
+
+    <!-- ===== عمود النتائج ===== -->
+    <section class="card" id="resultPanel" aria-live="polite">
+      <div class="card-title"><span class="step-num">2</span> التقرير المبدئي</div>
+      <p class="card-sub">سيظهر هنا تحليل حالتك بعد الضغط على «تحليل الحالة».</p>
+
+      <!-- الحالة الفارغة -->
+      <div class="empty-state" id="emptyState">
+        <div class="big">🩺</div>
+        <h3>في انتظار وصف الأعراض</h3>
+        <p>اكتب أو سجّل أعراضك ثم اضغط تحليل.</p>
+      </div>
+
+      <!-- صندوق النتيجة (يتعبأ من JavaScript) -->
+      <div id="result" class="result"></div>
+    </section>
+  </div>
+
+  <!-- ==========================================================
+       [E] خطوات "كيف يعمل"
+  ========================================================== -->
+  <div class="steps">
+    <div class="step"><span class="ico">🎤</span><div><b>1. صف أعراضك</b><p>بالكتابة أو بالصوت وباللهجة اللي تريحك.</p></div></div>
+    <div class="step"><span class="ico">🧠</span><div><b>2. تحليل ذكي</b><p>مطابقة عربية متقدمة أو ذكاء اصطناعي خارجي.</p></div></div>
+    <div class="step"><span class="ico">👨‍⚕️</span><div><b>3. استشر طبيبك</b><p>خذ التقرير معك لتسهيل الفحص السريري.</p></div></div>
+  </div>
+
+  <!-- ==========================================================
+       [F] آخر الفحوصات
+  ========================================================== -->
+  <section class="card" style="margin-top:22px">
+    <div class="card-title">📋 آخر الفحوصات <span id="historyCount" style="font-size:12px;color:var(--muted);font-weight:600"></span></div>
+    <p class="card-sub">محفوظة في متصفحك فقط — اضغط على أي فحص لإعادة تحميله.</p>
+    <div class="history-list" id="historyList"></div>
+  </section>
+</main>
+
+<footer>
+  🩺 منصة التشخيص الطبي الذكية v3.0 — للأغراض الاسترشادية فقط<br>
+  <span class="emerg">🚑 الإسعاف في مصر: 123</span>
+</footer>
+
+<!-- حاوية الإشعارات -->
+<div id="toasts" role="status"></div>
+
+<!-- ============================================================
+     [G] نافذة الإعدادات
+============================================================ -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <button class="close-x" onclick="closeSettings()" aria-label="إغلاق">✕</button>
+    <h2>⚙️ إعدادات الذكاء الاصطناعي</h2>
+    <p class="sub">اربط مفتاح API لتفعيل GPT أو Gemini للتحليل المتقدم.</p>
+
+    <label for="aiProvider">مزود الخدمة</label>
+    <select class="select" id="aiProvider">
+      <option value="local">🧠 المحرك المحلي (بدون إنترنت)</option>
+      <option value="openai">🤖 OpenAI GPT</option>
+      <option value="gemini">✨ Google Gemini</option>
+    </select>
+
+    <label for="apiKey">مفتاح API</label>
+    <input class="input" type="password" id="apiKey" placeholder="sk-... أو AIza..." autocomplete="off">
+
+    <label for="gptModel">اسم النموذج (اختياري)</label>
+    <input class="input" type="text" id="gptModel" placeholder="gpt-4o-mini / gemini-2.5-flash">
+
+    <div class="info-box">
+      <b>💡 كيف تحصل على مفتاح؟</b><br>
+      • OpenAI: platform.openai.com ← API Keys<br>
+      • Gemini: aistudio.google.com ← Get API Key<br><br>
+      المفتاح يُحفظ في متصفحك فقط، ويُرسل مباشرة للمزود الذي تختاره (مع وصف الأعراض) عند التحليل. لا تستخدم مفتاحًا حساسًا على جهاز مشترك.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeSettings()">إلغاء</button>
+      <button class="btn-primary" onclick="saveSettings()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     [H] نافذة السجل الكامل
+============================================================ -->
+<div class="modal-bg" id="historyModal">
+  <div class="modal">
+    <button class="close-x" onclick="closeHistory()" aria-label="إغلاق">✕</button>
+    <h2>📋 سجل الفحوصات الكامل</h2>
+    <p class="sub">كل الفحوصات محفوظة في متصفحك.</p>
+    <div id="fullHistory"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="clearHistory()">🗑 مسح السجل</button>
+      <button class="btn-primary" onclick="closeHistory()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   [1] قاعدة بيانات الأمراض
+   كل مرض: الاسم، قائمة الأعراض المرتبطة، التخصص، الأدوية، النصيحة
+================================================================ */
+const DISEASES = [
+  { name:"نزلة برد (Influenza-like)", // الاسم الظاهر في النتيجة
+    symptoms:["صداع","سعال","عطس","احتقان","رشح","زكام","قشعريرة","آلام جسد","حرارة","سخونة","كحة","مخاط","تعب","كسلة","بحّة"], // الأعراض المطلوب مطابقتها
+    dept:"باطنة / أمراض صدرية", // التخصص المقترح
+    meds:[
+      {n:"باراسيتامول 500mg", d:"خافض حرارة ومسكن — قرص كل 6 ساعات"},
+      {n:"إيبوبروفين 400mg", d:"مسكن ومضاد التهاب — بعد الأكل"},
+      {n:"فيتامين C 1000mg", d:"لدعم المناعة — قرص يوميًا"},
+      {n:"بخاخ أنفي ملحي", d:"لتنظيف الأنف — 2-3 مرات يوميًا"}],
+    advice:"راحة تامة وسوائل دافئة. المتابعة 5-7 أيام. راجع طبيب لو الحرارة استمرت فوق 3 أيام." },
+  { name:"التهاب حلق بكتيري",
+    symptoms:["حلق","بلع","حمى","غدد","لوز","صديد","زور","التهاب","صعوبة بلع","حرارة","بحّة"],
+    dept:"أنف وأذن وحنجرة",
+    meds:[
+      {n:"غرغرة ماء دافئ + ملح", d:"مهدئ موضعي — 3 مرات يوميًا"},
+      {n:"بخاخ موضعي للحلق", d:"مضاد التهاب — حسب الحاجة"},
+      {n:"باراسيتامول", d:"خافض حرارة ومسكن"}],
+    advice:"يُنصح بمزرعة حلق قبل المضاد الحيوي. البنسلين V هو الخيار الأول — بوصفة طبية." },
+  { name:"التهاب رئوي (Pneumonia)",
+    symptoms:["حمى","سعال","بلغم","صدر","ضيق تنفس","تنفس","ألم صدر","كحة بلغم","حرارة عالية","تعب شديد"],
+    dept:"أمراض صدرية",
+    meds:[
+      {n:"باراسيتامول", d:"خافض حرارة"},
+      {n:"مضاد حيوي (بوصفة)", d:"حسب نوع الالتهاب — لا يُصرف بدون طبيب"}],
+    advice:"🚨 يستلزم أشعة صدر + مزرعة بلغم فورًا. راجع طبيب فورًا — قد يحتاج دخول مستشفى." },
+  { name:"التهاب معدة وأمعاء حاد",
+    symptoms:["قيء","غثيان","إسهال","بطن","مغص","ترجيع","ترجع","بترجع","مغص بطن","لخبطة معدة","برد في المعدة","إسهال مائي"],
+    dept:"باطنة / جهاز هضمي",
+    meds:[
+      {n:"محلول إرواء فموي (ORS)", d:"كيس على كوب ماء بعد كل إسهال"},
+      {n:"بروبيوتيك", d:"كبسولة يوميًا لتعويض البكتيريا النافعة"},
+      {n:"فحم طبي", d:"مطهر معوي — قرص بعد الأكل"}],
+    advice:"أهم حاجة تعويض السوائل. راجع طبيب لو استمر أكثر من 3 أيام أو فيه دم." },
+  { name:"القولون العصبي",
+    symptoms:["انتفاخ","إمساك","مغص","مغص بعد الأكل","غازات","قولون","نفخة","بطن منتفخ","إسهال وإمساك","توتر"],
+    dept:"جهاز هضمي",
+    meds:[
+      {n:"مضادات انتفاخ (سميثيكون)", d:"قرص بعد الأكل"},
+      {n:"ملينات لطيفة", d:"سيلليوم — ملعقة على كوب ماء"},
+      {n:"بروبيوتيك", d:"كبسولة يوميًا"}],
+    advice:"نظام FODMAP منخفض. تجنب التوتر والكافيين. استبعد الأسباب العضوية أولًا." },
+  { name:"التهاب المسالك البولية",
+    symptoms:["حرقان","بول","تبول متكرر","ألم أسفل البطن","دم في البول","حرقان بول","رغبة في التبول","ألم بولي"],
+    dept:"مسالك بولية",
+    meds:[
+      {n:"مضاد حيوي (بوصفة)", d:"نتروفورانتوين أو سيفالوسبورين حسب زراعة البول"},
+      {n:"باراسيتامول", d:"مسكن للألم"},
+      {n:"فينازوبيريدين", d:"مطهر بولي للحرقان — مؤقت"}],
+    advice:"لازم تحليل + زراعة بول قبل العلاج. اشرب 2-3 لتر ماء يوميًا." },
+  { name:"حصوات الكلى",
+    symptoms:["ألم جانب","ألم شديد","كلى","مغص كلوي","دم بول","غثيان","ألم في الجنب","ألم بيجي ويروح"],
+    dept:"مسالك بولية",
+    meds:[
+      {n:"ديكلوفيناك", d:"مسكن قوي للحصوة — حقن أو أقراص"},
+      {n:"تامسولوسين (بوصفة)", d:"موسع قنوات لإخراج الحصوة"},
+      {n:"ميتوكلوبراميد", d:"مضاد قيء"}],
+    advice:"أشعة مقطعية KUB لتحديد حجم ومكان الحصوة. اشرب ماء بكثرة." },
+  { name:"التهاب جلدي",
+    symptoms:["حكة","طفح","احمرار","جلد","جفاف","إكزيما","هرش","حكة في الجلد","بقع حمراء"],
+    dept:"جلدية",
+    meds:[
+      {n:"مرطب يومي", d:"فازلين أو كريم سيراميد"},
+      {n:"هيدروكورتيزون 1%", d:"كريم موضعي خفيف — مرتين يوميًا"},
+      {n:"لوراتادين", d:"مضاد حكة فموي — قرص يوميًا"}],
+    advice:"تجنب المهيجات والماء الساخن. الترطيب المنتظم مهم جدًا." },
+  { name:"فطريات جلدية",
+    symptoms:["حكة","تقشر","بقع","فطريات","قدم","أظافر متغيرة","تسلخ بين الأصابع","حكة بين الفخدين"],
+    dept:"جلدية",
+    meds:[
+      {n:"كلوتريمازول 2%", d:"كريم مضاد فطري — مرتين يوميًا"},
+      {n:"بودرة للقدم", d:"للوقاية من التعرق"}],
+    advice:"استمر على الكريم 2-4 أسابيع حتى بعد اختفاء الأعراض." },
+  { name:"صداع توتري",
+    symptoms:["صداع","ضغط","تعب","رقبة","إجهاد","وجع راس","راسي بيوجعني","ضغط على الراس"],
+    dept:"مخ وأعصاب",
+    meds:[
+      {n:"باراسيتامول 500-1000mg", d:"عند الحاجة"},
+      {n:"إيبوبروفين 400mg", d:"مسكن مضاد التهاب"},
+      {n:"كمادات دافئة", d:"على الرقبة والكتفين"}],
+    advice:"المسكنات باعتدال. تجنب الإجهاد والنوم المتأخر. الرياضة والاسترخاء يساعدان." },
+  { name:"الصداع النصفي (Migraine)",
+    symptoms:["صداع نصف","غثيان","حساسية للضوء","وخز","نبض","صداع نابض","صداع في جهة واحدة","دوخة مع صداع"],
+    dept:"مخ وأعصاب",
+    meds:[
+      {n:"سوماتريبتان (بوصفة)", d:"عند بداية النوبة"},
+      {n:"إيبوبروفين 400mg", d:"مبكرًا عند الإحساس بالنوبة"},
+      {n:"ميتوكلوبراميد", d:"مضاد قيء"}],
+    advice:"تجنب المحفزات: أكل معين، قلة نوم، ضوء قوي، توتر. احتفظ بمفكرة النوبات." },
+  { name:"ارتفاع ضغط الدم",
+    symptoms:["ضغط","صداع خلف الرأس","دوخة","خفقان","طنين في الأذن","نزيف أنف متكرر"],
+    dept:"باطنة / قلب",
+    meds:[{n:"العلاج الدوائي (بوصفة)", d:"حسب الدرجة — مدرات، بيتا بلوكرز، أو حاصرات قنوات الكالسيوم"}],
+    advice:"قياس ضغط يومي + تقليل الملح + رياضة منتظمة + تقليل التوتر." },
+  { name:"فقر الدم (Anemia)",
+    symptoms:["تعب","شحوب","دوخة","تنفس سريع","خمول","تعب عند المجهود","اصفرار الوجه"],
+    dept:"باطنة / أمراض دم",
+    meds:[
+      {n:"حديد فموي", d:"فيروجلوبين + فيتامين C لتحسين الامتصاص"},
+      {n:"حمض الفوليك", d:"قرص يوميًا"},
+      {n:"فيتامين B12", d:"حقن أو أقراص حسب النقص"}],
+    advice:"تحليل صورة دم كاملة + فيريتين لتحديد نوع فقر الدم وسببه." },
+  { name:"التهاب المفاصل",
+    symptoms:["مفصل","تورم","ألم عند الحركة","تيبس صباحي","ألم في الركبة","ألم في المفصل","صعوبة الحركة"],
+    dept:"عظام وروماتيزم",
+    meds:[
+      {n:"إيبوبروفين", d:"مسكن مضاد التهاب — بعد الأكل"},
+      {n:"كريم موضعي", d:"ديكلوفيناك جل — 3 مرات يوميًا"},
+      {n:"كمادات دافئة", d:"للتيبس الصباحي"}],
+    advice:"أشعة المفصل + تحاليل روماتيزم للتأكد من النوع (التهابي أو تنكسي)." },
+  { name:"داء السكري",
+    symptoms:["عطش شديد","تبول متكرر","نقص وزن","تعب","جوع","عطش","كثرة التبول","جفاف الفم"],
+    dept:"غدد صم وسكري",
+    meds:[{n:"الميتفورمين (بوصفة)", d:"الخيار الأول لداء السكري النوع 2"}],
+    advice:"قياس سكر صائم + تراكمي HbA1c. متابعة مع أخصائي غدد وسكري." },
+  { name:"قصور الغدة الدرقية",
+    symptoms:["خمول","زيادة وزن","برودة","إمساك","تساقط شعر","جفاف الجلد","انتفاخ الوجه","بطء"],
+    dept:"غدد صم",
+    meds:[{n:"ليفوثيروكسين (بوصفة)", d:"يُحدد الجرعة حسب التحاليل — يُؤخذ صائمًا"}],
+    advice:"تحليل TSH + T4 للتشخيص والمتابعة." },
+  { name:"التهاب الجيوب الأنفية",
+    symptoms:["وجع وجه","احتقان","إفرازات","صداع أمامي","أنف مسدود","ألم تحت العين","صعوبة التنفس من الأنف"],
+    dept:"أنف وأذن وحنجرة",
+    meds:[
+      {n:"غسول أنفي", d:"بمحلول ملحي — 2 مرات يوميًا"},
+      {n:"فلوتيكازون بخاخ", d:"ستيرويد أنفي — مرة يوميًا"},
+      {n:"باراسيتامول", d:"خافض حرارة ومسكن"}],
+    advice:"مضاد حيوي لو استمر أكثر من 10 أيام أو مع حمى عالية." },
+  { name:"قرحة المعدة",
+    symptoms:["ألم فوق السرة","حرقة","حموضة","غثيان","أكل يخفف","ألم معدة","حرقة في المعدة","ألم يزيد بالجوع"],
+    dept:"جهاز هضمي",
+    meds:[
+      {n:"أوميبرازول 20mg", d:"مثبط مضخة البروتون — قبل الفطار بنص ساعة"},
+      {n:"Gaviscon", d:"مضاد حموضة سريع"}],
+    advice:"منظار علوي للتأكد. فحص جرثومة المعدة (H.Pylori) وعلاجها لو موجودة." },
+  { name:"الربو",
+    symptoms:["صفير","ضيق تنفس","كحة ليلية","ضغط صدر","كتمة","صعوبة التنفس","كحة عند المجهود"],
+    dept:"صدرية / حساسية",
+    meds:[
+      {n:"بخاخ كورتيكوستيرويد (بوصفة)", d:"للوقاية — مرة يوميًا"},
+      {n:"سالبوتامول بخاخ", d:"موسع سريع — عند النوبة"},
+      {n:"لوراتادين", d:"مضاد حساسية"}],
+    advice:"تقييم وظائف الرئة + خطة عمل مكتوبة. تجنب المحفزات." },
+  { name:"نقص فيتامين د",
+    symptoms:["آلام عظام","تعب","ألم عضلات","مشاكل مزاج","اكتئاب","تساقط شعر","ضعف عام"],
+    dept:"عظام / غدد",
+    meds:[
+      {n:"فيتامين D3 50,000 وحدة", d:"أسبوعيًا × 8 أسابيع ثم صيانة"},
+      {n:"كالسيوم + فيتامين D", d:"قرص يوميًا"}],
+    advice:"تحليل 25-OH Vitamin D قبل وبعد العلاج. التعرض للشمس 15 دقيقة يوميًا." }
+];
+
+/* ================================================================
+   [2] أعراض الطوارئ — لو اتطابق أي واحد منها تظهر رسالة طوارئ فورًا
+================================================================ */
+const EMERGENCY = [
+  "ألم صدر","ألم في الصدر","ضيق تنفس شديد","إغماء","نزيف","خدر في","فقدان وعي",
+  "هبوط حاد","لا أستطيع التنفس","قلبي بيوجعني","مش قادر اتنفس","دم في القيء",
+  "شلل","تشنجات","صرع","ألم في الذراع اليسرى"
+];
+
+/* ================================================================
+   [3] قاموس العامية المصرية → المصطلح الفصيح
+   المفتاح: ما يقوله المريض | القيمة: المصطلح الطبي المقابل
+================================================================ */
+const SYNONYMS = {
+  // --- الرأس ---
+  "نفوخي":"رأس","نافوخي":"رأس","نفوخ":"رأس","نافوخ":"رأس","عضم راسي":"صداع","دماغي":"رأس","مخي":"رأس",
+  "راس":"صداع","رأس":"صداع","راسي":"صداع","في راسي":"صداع","وجع راسي":"صداع","بيوجعني راسي":"صداع",
+  "راسي بيلف":"دوخة","راسي تقيل":"صداع","راسي هتفرتك":"صداع","راسي بينبض":"صداع",
+  // --- الحرارة ---
+  "حرارة":"حمى","سخونة":"حمى","سخنة":"حمى","جسمي حار":"حمى","جسمي ولعان":"حمى","نار في جسمي":"حمى",
+  "حرارة عالية":"حمى","بتسخن":"حمى","سخونية":"حمى","محموم":"حمى",
+  // --- التنفس ---
+  "ضيق نفس":"ضيق تنفس","نفسي واقف":"ضيق تنفس","مش قادر اتنفس":"ضيق تنفس","مش قادر اخد نفسي":"ضيق تنفس",
+  "كتمة":"ضيق تنفس","كتامة":"ضيق تنفس","نهجان":"ضيق تنفس","بنهج":"ضيق تنفس","بتنفس بصعوبة":"ضيق تنفس",
+  "صدري ضايق":"ضيق تنفس","نفسي ضايق":"ضيق تنفس",
+  // --- الأنف ---
+  "زكام":"رشح","زكامة":"رشح","منخاري":"رشح","مناخيري":"رشح","منخيري":"رشح","أنفي":"رشح",
+  "أنفي مسدود":"احتقان أنف","مناخيري مسدودة":"احتقان أنف","مش بقدر اتنفس من مناخيري":"احتقان أنف",
+  "مخاط":"بلغم","عطس":"عطس","بعطس":"عطس",
+  // --- الحلق ---
+  "حلقي":"حلق","زوري":"حلق","حنجرتي":"حلق","حلقي بيوجعني":"حلق","زوري بيوجعني":"حلق",
+  "بتعب من البلع":"صعوبة بلع","ببلع بصعوبة":"صعوبة بلع","بلعي موجعني":"حلق","حلقي ناشف":"حلق",
+  "حلقي بيحرقني":"التهاب حلق","بحرق في زوري":"حلق",
+  // --- المعدة والبطن ---
+  "بطني":"بطن","بطني بتقولي":"مغص","بطني بتوجعني":"مغص","بطني بتحرق":"حرقة",
+  "معدتي":"ألم معدة","معدتي بتوجعني":"ألم معدة","معدتي بتلعب":"غثيان","قلقان":"غثيان","نفسي استفرغ":"غثيان",
+  "حاسس إني هترجع":"غثيان","بحس اني هترجع":"غثيان","هترجع":"غثيان",
+  "ترجيع":"قيء","بترجع":"قيء","ترجع":"قيء","بستفرغ":"قيء","برجع":"قيء",
+  "اسهال":"إسهال","جري":"إسهال","بطن مليانة":"انتفاخ","منفوخ":"انتفاخ","غازات":"انتفاخ",
+  "مغص":"ألم بطن","كرمب":"مغص","بطن بتلوي":"مغص","حموضة":"حرقة","حامض":"حرقة",
+  "لخبطة معدة":"إسهال","برد في المعدة":"إسهال",
+  // --- الجلد ---
+  "هرش":"حكة","هرشة":"حكة","بهرش":"حكة","هرشاني":"حكة","نمش":"طفح","بقع":"طفح","بقع حمراء":"طفح",
+  "جلدي بيحرقني":"احمرار","جلدي ناشف":"جفاف","بقع في جسمي":"طفح",
+  // --- العضلات والمفاصل ---
+  "مفصلي":"مفصل","ركبتي":"مفصل","ركبتي بتوجعني":"مفصل","ضهري":"ألم ظهر","ضهري بيوجعني":"ألم ظهر","ظهري":"ألم ظهر",
+  "عضلاتي":"ألم عضلات","جسمي مكسر":"آلام جسد","حاسس إني مضروب":"آلام جسد","جسمي بيفتك":"آلام جسد","كل حاجة بوجعني":"آلام جسد",
+  // --- الحالة العامة ---
+  "تعبان":"تعب","تعبانة":"تعب","منهك":"تعب شديد","منهكة":"تعب شديد","كسلان":"خمول","حاسس بضعف":"تعب",
+  "حاسس بخمول":"خمول","جسمي سقيم":"تعب","مش قادر أقف":"تعب شديد",
+  "دوخة":"دوار","دايخ":"دوخة","دايخة":"دوخة","بدوخ":"دوخة","بحس إني هقع":"دوخة","شايف الدنيا بتلف":"دوخة",
+  // --- العين والأذن والأسنان ---
+  "عيني":"ألم عين","عيوني":"ألم عين","عيوني بتوجعني":"ألم عين","ودني":"ألم أذن","ودني بتوجعني":"ألم أذن","طنين":"طنين في الأذن",
+  "سناني":"ألم أسنان","سناني بتوجعني":"ألم أسنان","ضرسي":"ألم أسنان","ضرسي بيوجعني":"ألم أسنان","لثتي":"ألم لثة",
+  // --- القلب والصدر ---
+  "قلبي":"ألم صدر","قلبي بيوجعني":"ألم صدر","صدري":"ألم صدر","صدري بيوجعني":"ألم صدر",
+  "قلبي بيدق بسرعة":"خفقان","قلبي بيلخبط":"خفقان",
+  // --- المسالك البولية ---
+  "بولي":"بول","بحس بحرقان في البول":"حرقان بول","ببولي كتير":"تبول متكرر","بتبول كتير":"تبول متكرر",
+  "كلي":"ألم كلى","كليتي":"ألم كلى","كليتي بتوجعني":"ألم كلى"
+};
+
+/* أعراض سريعة تظهر كشرائح تحت مربع الكتابة */
+const QUICK_SYMPTOMS = ["صداع","حرارة","سعال","ألم بطن","غثيان","إسهال","ضيق تنفس","حكة","دوخة","ألم حلق","تعب عام","ألم ظهر"];
+
+/* ================================================================
+   [4] تصحيح أخطاء التعرف الصوتي الشائعة (الغلط ← الصح)
+================================================================ */
+const SPEECH_CORRECTIONS = {
+  "وجع فراسي":"وجع في راسي",
+  "وجع براسي":"وجع في راسي",
+  "وجع فرأسي":"وجع في راسي",
+  "بحه":"بحّة"
+};
+function correctSpeechText(text){
+  let out = text;
+  for(const wrong in SPEECH_CORRECTIONS){
+    out = out.split(wrong).join(SPEECH_CORRECTIONS[wrong]); // استبدال كل ظهور للكلمة الخاطئة
+  }
+  return out;
+}
+
+/* ================================================================
+   [5] أدوات مساعدة عامة
+================================================================ */
+const $ = id => document.getElementById(id); // اختصار لجلب عنصر بالـ id
+
+// تحويل أي نص لصيغة آمنة قبل إدخاله في HTML (يمنع حقن الأكواد XSS)
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// قراءة JSON من localStorage بأمان (لو فيه خطأ يرجع القيمة الافتراضية)
+function loadJSON(key, fallback){
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch(e){ return fallback; }
+}
+
+// دمج نصين بمسافة واحدة بينهما
+function joinText(a, b){
+  a = (a || "").trim(); b = (b || "").trim();
+  return a && b ? a + " " + b : a || b;
+}
+
+/* إشعار منبثق بدل alert — النوع: info | success | error */
+function toast(message, type = "info", ms = 3800){
+  const t = document.createElement("div");
+  t.className = "toast " + type;
+  t.textContent = message;
+  $("toasts").appendChild(t);
+  setTimeout(() => t.remove(), ms); // يختفي تلقائيًا
+}
+
+/* نافذة تأكيد احترافية بدل confirm — ترجع Promise<boolean> */
+function askConfirm(message, okLabel = "تأكيد"){
+  return new Promise(resolve => {
+    const m = document.createElement("div");
+    m.className = "modal-bg show";
+    m.style.zIndex = "10002";
+    m.innerHTML = `<div class="modal" style="max-width:400px">
+        <h2>تأكيد الإجراء</h2><p class="sub">${escapeHTML(message)}</p>
+        <div class="modal-actions">
+          <button class="btn-ghost" data-v="0">إلغاء</button>
+          <button class="btn-primary" data-v="1">${escapeHTML(okLabel)}</button>
+        </div></div>`;
+    m.addEventListener("click", e => {
+      const v = e.target.dataset?.v;
+      if(v === undefined && e.target !== m) return; // ضغط داخل النافذة بدون زر
+      m.remove(); resolve(v === "1");
+    });
+    document.body.appendChild(m);
+  });
+}
+
+/* ================================================================
+   [6] المعالجة اللغوية العربية
+================================================================ */
+
+// توحيد النص: إزالة التشكيل وتوحيد الألف والتاء المربوطة والياء وحذف الرموز
+function normalize(text){
+  return String(text)
+    .replace(/[أإآٱ]/g,"ا")              // كل أشكال الألف → ا
+    .replace(/ة/g,"ه")                    // التاء المربوطة → هاء
+    .replace(/ى/g,"ي")                    // الألف المقصورة → ياء
+    .replace(/[\u064B-\u0652\u0670]/g,"") // حذف التشكيل
+    .replace(/ـ/g,"")                     // حذف التطويل
+    .replace(/[^\u0600-\u06FFa-zA-Z0-9\s]/g," ") // حذف الرموز
+    .replace(/\s+/g," ").trim().toLowerCase();
+}
+
+// مسافة ليفنشتاين: عدد التعديلات اللازمة لتحويل كلمة لأخرى (لتسامح الأخطاء الإملائية)
+function levenshtein(a,b){
+  if(!a.length) return b.length;
+  if(!b.length) return a.length;
+  const m = [];
+  for(let i=0;i<=b.length;i++) m[i]=[i];
+  for(let j=0;j<=a.length;j++) m[0][j]=j;
+  for(let i=1;i<=b.length;i++){
+    for(let j=1;j<=a.length;j++){
+      m[i][j] = b[i-1]===a[j-1] ? m[i-1][j-1] : 1 + Math.min(m[i-1][j-1], m[i-1][j], m[i][j-1]);
+    }
+  }
+  return m[b.length][a.length];
+}
+
+// استخراج جذر مبسّط للكلمة (حذف السوابق واللواحق الشائعة)
+function arabicStem(word){
+  return word
+    .replace(/^(وال|بال|فال|كال|ال|لل)/,"")
+    .replace(/(ات|ون|ين|وا|نا|ها|هم|هن|كم|كن|هما|ني|ته|يه|وي|تي|كي|ي)$/,"")
+    .trim();
+}
+
+// هل النص يحتوي العبارة؟ — العبارات القصيرة (≤3 حروف) تُطابق ككلمة كاملة لتفادي المطابقة الخاطئة
+function contains(hay, needle){
+  if(!needle) return false;
+  if(needle.length <= 3) return (" " + hay + " ").includes(" " + needle + " ");
+  return hay.includes(needle);
+}
+
+// هل الكلمتان متقاربتان؟ (تطابق أو احتواء أو خطأ إملائي بسيط)
+function wordClose(t, w){
+  if(t === w) return true;
+  if(w.length < 4 || t.length < 4) return false;
+  if(t.includes(w) || w.includes(t)) return true;
+  return levenshtein(t, w) <= (w.length >= 7 ? 2 : 1);
+}
+
+/* ================================================================
+   [7] محرك المطابقة الذكي
+================================================================ */
+// تجهيز القاموس مرة واحدة (تطبيع المفاتيح والقيم) لتسريع البحث
+const NORM_SYN = Object.entries(SYNONYMS).map(([w,s]) => [normalize(w), normalize(s)]);
+
+function smartMatch(text, symptom){
+  const textNorm = normalize(text);
+  const symNorm  = normalize(symptom);
+  if(!textNorm || !symNorm) return false;
+
+  // (أ) تطابق مباشر
+  if(contains(textNorm, symNorm)) return true;
+
+  const textWords = textNorm.split(" ").filter(w => w.length > 1);
+  const symWords  = symNorm.split(" ").filter(w => w.length > 1);
+
+  // (ب) تطابق عبر قاموس العامية
+  for(const [wNorm, sNorm] of NORM_SYN){
+    if(!contains(textNorm, wNorm)) continue; // المريض ما قالش الكلمة العامية دي
+    if(symNorm === sNorm || symNorm === wNorm) return true;
+    if(symNorm.length >= 4 && sNorm.length >= 3 && (sNorm.includes(symNorm) || symNorm.includes(sNorm))) return true;
+  }
+
+  // (ج) تطابق الجذور للأعراض المكوّنة من كلمة واحدة
+  const symStem = arabicStem(symNorm);
+  if(symStem.length >= 3 && symWords.length === 1){
+    for(const w of textWords){
+      const ws = arabicStem(w);
+      if(ws.length < 3) continue;
+      if(ws === symStem) return true;
+      if(ws.length >= 4 && symStem.length >= 4 && (ws.startsWith(symStem) || symStem.startsWith(ws))) return true;
+    }
+  }
+
+  // (د) تطابق كلمة بكلمة مع تسامح الأخطاء — العرض المركّب لازم أغلب كلماته تتطابق
+  const meaningful = symWords.filter(w => w.length >= 3);
+  if(!meaningful.length) return false;
+  const matched = meaningful.filter(w => textWords.some(t => wordClose(t, w)));
+  return matched.length >= Math.ceil(meaningful.length * (meaningful.length > 1 ? 0.67 : 1));
+}
+
+/* ================================================================
+   [8] الحالة العامة للتطبيق
+================================================================ */
+let settings  = loadJSON("med_settings", {}); // إعدادات الـ AI المحفوظة
+let history   = loadJSON("med_history", []);  // سجل الفحوصات
+let imageData = null;                         // الصورة المرفوعة {mime, base64, dataUrl}
+
+// قراءة بيانات المريض الاختيارية من الحقول
+function getPatient(){
+  const age = parseInt($("age").value, 10);
+  return { age: Number.isFinite(age) ? age : null, gender: $("gender").value };
+}
+
+/* تحديث شريط حالة المحرك (محلي أو AI) */
+function updateAIStatus(){
+  const st = $("aiStatus"), txt = $("aiStatusText");
+  if(settings.provider && settings.provider !== "local" && settings.apiKey){
+    st.className = "ai-status online";
+    txt.textContent = `🤖 الذكاء الاصطناعي مُفعَّل (${settings.provider === "openai" ? "GPT" : "Gemini"})`;
+  } else {
+    st.className = "ai-status local";
+    txt.textContent = "🧠 المحرك المحلي الذكي — بدون إنترنت";
+  }
+}
+
+/* ================================================================
+   [9] الإدخال الصوتي
+   - لا تكرار للنص (كل جملة نهائية تُضاف مرة واحدة)
+   - إعادة تشغيل تلقائية لو المتصفح أنهى الجلسة
+   - على الموبايل نحرر الميك قبل التعرف لتفادي التعارض
+================================================================ */
+const SILENCE_TIMEOUT = 6000; // توقف تلقائي بعد 6 ثوانٍ صمت
+const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+
+let recognition = null;   // كائن التعرف الصوتي الحالي
+let listening = false;    // هل المستخدم عايز التسجيل شغّال؟
+let baseText = "";        // النص النهائي المثبّت
+let interimText = "";     // النص المؤقت أثناء الكلام
+let silenceTimer = null;  // مؤقت الصمت
+let mediaStream = null;   // تيار الميكروفون (للكمبيوتر فقط)
+let audioContext = null, analyser = null, levelAnimation = null; // مؤشر مستوى الصوت
+let stopFallbackTimer = null;
+
+// طلب إذن الميكروفون من المستخدم
+async function requestMicPermission(){
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true } });
+  } catch(err){ console.error("Mic permission error:", err); return null; }
+}
+
+// تحرير الميكروفون وإيقاف كل المسارات
+function releaseStream(){
+  if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+}
+
+// نافذة مساعدة تشرح للمستخدم كيف يسمح بالميكروفون
+function showMicHelp(extra){
+  const modal = document.createElement("div");
+  modal.className = "modal-bg show";
+  modal.style.zIndex = "10000";
+  modal.innerHTML = `
+    <div class="modal" style="max-width:560px">
+      <button class="close-x" type="button">✕</button>
+      <h2>🎤 إزاي تسمح للميكروفون؟</h2>
+      ${extra ? `<p class="sub" style="color:var(--amber)">${escapeHTML(extra)}</p>` : ""}
+      <div class="help-card" style="border-right:4px solid #0b6bcb"><b>🌐 Chrome (كمبيوتر):</b><br>
+        1. اضغط أيقونة 🔒 جنب رابط الموقع<br>2. إعدادات الموقع ← الميكروفون ← السماح<br>3. أعد تحميل الصفحة (F5)</div>
+      <div class="help-card" style="border-right:4px solid #16a34a"><b>📱 الموبايل (Chrome):</b><br>⋮ ← إعدادات الموقع ← الميكروفون ← السماح</div>
+      <div class="help-card" style="border-right:4px solid #d97706"><b>⚠️ مهم:</b><br>
+        • الصفحة لازم تكون على <b>https://</b> أو <b>localhost</b><br>
+        • فتح الملف مباشرة (<b>file://</b>) غالبًا يمنع التعرف الصوتي — شغّله عبر localhost أو استضافة https<br>
+        • استخدم Chrome أو Edge لأفضل دقة عربية</div>
+      <div class="modal-actions">
+        <button class="btn-primary" type="button" data-act="reload">🔄 تحديث الصفحة</button>
+        <button class="btn-ghost" type="button" data-act="close">إغلاق</button>
+      </div>
+    </div>`;
+  modal.querySelector(".close-x").onclick = () => modal.remove();
+  modal.querySelector('[data-act="close"]').onclick = () => modal.remove();
+  modal.querySelector('[data-act="reload"]').onclick = () => location.reload();
+  document.body.appendChild(modal);
+}
+
+// مؤشر مستوى الصوت (شريط ملوّن يتحرك مع صوتك) — للكمبيوتر فقط
+function showAudioLevel(stream){
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+  } catch(e){ analyser = null; return; }
+
+  const box = document.createElement("div");
+  box.id = "audioLevel";
+  box.style.cssText = "position:absolute;bottom:8px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.75);padding:6px 12px;border-radius:99px;z-index:10";
+  box.innerHTML = `<span style="color:#fff;font-size:11px">🎙️</span>
+    <div style="width:80px;height:6px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden">
+      <div id="audioBar" style="height:100%;width:0%;background:linear-gradient(90deg,#16a34a,#fbbf24,#dc2626);transition:width .1s"></div></div>`;
+  document.querySelector(".textarea-wrap").appendChild(box);
+
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  (function tick(){
+    if(!analyser) return;
+    analyser.getByteFrequencyData(data);                       // قراءة ترددات الصوت
+    let sum = 0; for(let i=0;i<data.length;i++) sum += data[i];
+    const pct = Math.min((sum / data.length / 128) * 100, 100); // تحويل المتوسط لنسبة
+    const bar = $("audioBar"); if(bar) bar.style.width = pct + "%";
+    levelAnimation = requestAnimationFrame(tick);
+  })();
+}
+
+// إيقاف المؤشر وتنظيف الموارد
+function stopAudioLevel(){
+  if(levelAnimation) cancelAnimationFrame(levelAnimation);
+  levelAnimation = null;
+  const box = $("audioLevel"); if(box) box.remove();
+  if(audioContext){ audioContext.close().catch(()=>{}); audioContext = null; }
+  analyser = null;
+}
+
+// شارة "بيتسجل" الحمراء أسفل مربع النص
+function showIndicator(text){
+  let ind = $("speechIndicator");
+  if(!ind){
+    ind = document.createElement("div");
+    ind.id = "speechIndicator";
+    ind.style.cssText = "position:absolute;bottom:8px;left:12px;max-width:55%;background:linear-gradient(90deg,#dc2626,#f97316);color:#fff;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700;z-index:10;animation:pulse 1.5s infinite;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+    document.querySelector(".textarea-wrap").appendChild(ind);
+  }
+  ind.textContent = text;
+}
+function hideIndicator(){ const i = $("speechIndicator"); if(i) i.remove(); }
+
+// إعادة زر الميك لشكله الأصلي
+function resetMicUI(){
+  const btn = $("micBtn");
+  btn.classList.remove("recording");
+  btn.disabled = false;
+  btn.innerHTML = "🎤 إدخال صوتي";
+}
+
+// تنظيف كامل بعد انتهاء التسجيل
+function cleanupMic(){
+  clearTimeout(silenceTimer); clearTimeout(stopFallbackTimer);
+  listening = false; recognition = null;
+  hideIndicator(); stopAudioLevel(); releaseStream(); resetMicUI();
+  if(interimText){ baseText = joinText(baseText, correctSpeechText(interimText)); interimText = ""; } // تثبيت آخر كلام
+  $("symptoms").value = baseText;
+  updateCounter();
+  if(navigator.vibrate) navigator.vibrate(50);
+}
+
+// مؤقت الصمت: يوقف التسجيل لو مفيش كلام
+function resetSilenceTimer(){
+  clearTimeout(silenceTimer);
+  silenceTimer = setTimeout(stopListening, SILENCE_TIMEOUT);
+}
+
+// إيقاف التسجيل (بطلب المستخدم أو بسبب الصمت)
+function stopListening(){
+  listening = false;
+  clearTimeout(silenceTimer);
+  const rec = recognition;
+  if(rec){
+    try { rec.stop(); } catch(e){}
+    clearTimeout(stopFallbackTimer);
+    stopFallbackTimer = setTimeout(() => { if(recognition === rec) cleanupMic(); }, 1500); // احتياطي لو onend ما اشتغلش
+  } else cleanupMic();
+}
+
+// بدء جلسة تعرف صوتي (تُستدعى تلقائيًا من جديد لو الجلسة انتهت)
+function startRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  recognition = rec;
+  rec.lang = "ar-EG";              // العربية المصرية
+  rec.continuous = !IS_MOBILE;     // الموبايل: جلسات قصيرة لتفادي تكرار النتائج
+  rec.interimResults = true;       // نتائج لحظية أثناء الكلام
+  rec.maxAlternatives = 1;
+
+  rec.onstart = () => showIndicator("🎙️ اتكلم دلوقتي...");
+
+  // عند وصول نتيجة: نثبّت الجمل النهائية مرة واحدة، ونعرض المؤقت فقط بدون تثبيت
+  rec.onresult = (e) => {
+    resetSilenceTimer();
+    let interim = "";
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      const t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) baseText = joinText(baseText, correctSpeechText(t));
+      else interim += t;
+    }
+    interimText = interim;
+    $("symptoms").value = joinText(baseText, interimText);
+    $("symptoms").scrollTop = $("symptoms").scrollHeight;
+    updateCounter();
+    showIndicator("🎙️ " + (interim ? interim.slice(-40) : "بيتسجل..."));
+  };
+
+  // معالجة الأخطاء برسائل واضحة
+  rec.onerror = (e) => {
+    console.warn("Speech error:", e.error);
+    switch(e.error){
+      case "not-allowed":
+      case "service-not-allowed": listening = false; showMicHelp("المتصفح منع التعرف الصوتي."); break;
+      case "audio-capture":       listening = false; toast("⚠️ مش لاقي ميكروفون شغّال. تأكد إنه موصّل ومش مستخدم في برنامج تاني.", "error"); break;
+      case "network":             listening = false; toast("⚠️ التعرف الصوتي محتاج إنترنت. تأكد من الاتصال.", "error"); break;
+      case "language-not-supported": listening = false; toast("⚠️ المتصفح لا يدعم العربية (مصر) للتعرف الصوتي.", "error"); break;
+      default: break; // no-speech / aborted: نكمل عادي
+    }
+  };
+
+  // عند انتهاء الجلسة: لو المستخدم لسه عايز يسجل نبدأ جلسة جديدة، وإلا ننظف
+  rec.onend = () => {
+    if(recognition !== rec) return;
+    if(interimText){ baseText = joinText(baseText, correctSpeechText(interimText)); interimText = ""; $("symptoms").value = baseText; }
+    if(listening){
+      setTimeout(() => {
+        if(!listening || recognition !== rec) return;
+        try { startRecognition(); } catch(err){ cleanupMic(); }
+      }, 250);
+    } else cleanupMic();
+  };
+
+  rec.start();
+}
+
+// زر الميكروفون: تشغيل/إيقاف
+$("micBtn").addEventListener("click", async () => {
+  if(listening || recognition){ stopListening(); return; } // لو شغّال → إيقاف
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast("⚠️ المتصفح لا يدعم الإدخال الصوتي — استخدم Chrome أو Edge", "error"); return; }
+  if(!window.isSecureContext){ toast("⚠️ الميكروفون محتاج اتصال آمن (https أو localhost).", "error"); return; }
+
+  const btn = $("micBtn");
+  btn.innerHTML = "⏳ جاري طلب الإذن...";
+  btn.disabled = true;
+  const stream = await requestMicPermission(); // نطلب الإذن
+  btn.disabled = false;
+
+  if(!stream){ resetMicUI(); showMicHelp("لم يتم السماح بالوصول للميكروفون."); return; }
+
+  if(IS_MOBILE){ stream.getTracks().forEach(t => t.stop()); mediaStream = null; } // الموبايل: نحرر الميك
+  else { mediaStream = stream; showAudioLevel(stream); }                           // الكمبيوتر: نعرض المؤشر
+
+  baseText = $("symptoms").value.trim();
+  interimText = "";
+  listening = true;
+  btn.classList.add("recording");
+  btn.innerHTML = "🔴 بيتسجل... اضغط للإيقاف";
+
+  try {
+    startRecognition();
+    resetSilenceTimer();
+    if(navigator.vibrate) navigator.vibrate([30,50,30]);
+  } catch(err){ toast("⚠️ تعذر بدء التسجيل: " + err.message, "error"); cleanupMic(); }
+});
+
+// لو المستخدم كتب يدويًا أثناء التسجيل نحافظ على كتابته
+$("symptoms").addEventListener("input", () => {
+  if(listening) baseText = $("symptoms").value.trim();
+  updateCounter();
+});
+
+// تنظيف عند إغلاق الصفحة
+window.addEventListener("beforeunload", () => { try { recognition && recognition.abort(); } catch(e){} releaseStream(); });
+
+/* ================================================================
+   [10] رفع الأشعة / التحاليل
+================================================================ */
+$("fileInput").addEventListener("change", () => {
+  const file = $("fileInput").files[0];
+  if(!file) return;
+  if(!file.type.startsWith("image/")){ toast("⚠️ الملف لازم يكون صورة", "error"); removeImage(); return; }
+  if(file.size > 5 * 1024 * 1024){ toast("⚠️ الحجم كبير — أقل من 5 ميجا", "error"); removeImage(); return; }
+
+  const old = $("preview").src;
+  if(old && old.startsWith("blob:")) URL.revokeObjectURL(old); // تحرير الذاكرة
+  $("preview").src = URL.createObjectURL(file);
+  $("previewWrap").style.display = "block";
+
+  const reader = new FileReader(); // نحول الصورة لـ base64 لإرسالها للـ AI
+  reader.onload = () => {
+    const dataUrl = String(reader.result);
+    imageData = { mime:file.type, base64:dataUrl.split(",")[1], dataUrl };
+  };
+  reader.readAsDataURL(file);
+});
+
+function removeImage(){
+  const src = $("preview").src;
+  if(src && src.startsWith("blob:")) URL.revokeObjectURL(src);
+  $("fileInput").value = "";
+  $("preview").removeAttribute("src");
+  $("previewWrap").style.display = "none";
+  imageData = null;
+}
+
+/* ================================================================
+   [11] محرك التشخيص المحلي
+================================================================ */
+function localDiagnose(text, patient){
+  // (1) فحص الطوارئ أولاً — أي تطابق يعني تحويل فوري
+  for(const word of EMERGENCY){
+    if(smartMatch(text, word)){
+      return {
+        type:"danger", source:"local",
+        title:"🚨 حالة طارئة — تحويل فوري للطوارئ",
+        html:`<p style="line-height:1.9;font-size:15px">الأعراض المُدخلة قد تشير إلى <strong>حالة تستوجب تدخلًا طبيًا عاجلًا</strong>.<br>
+              <strong>لا تُعطِ أي دواء.</strong> اتصل بالإسعاف <b>123</b> أو اذهب لأقرب طوارئ فورًا.</p>`
+      };
+    }
+  }
+
+  // (2) حساب درجة تطابق كل مرض
+  const results = DISEASES.map(d => {
+    const found = d.symptoms.filter(sym => smartMatch(text, sym));  // الأعراض المتطابقة
+    const matches = found.length;
+    const ratio = matches / d.symptoms.length;                      // نسبة التطابق
+    const boost = Math.min(matches / 5, 0.3);                       // مكافأة لكثرة التطابقات
+    const percent = Math.round(Math.min((ratio + boost) * 100, 98)); // نسبة الثقة (حد أقصى 98%)
+    return { ...d, matches, percent, found };
+  }).filter(d => d.matches > 0)
+    .sort((a,b) => b.percent - a.percent || b.matches - a.matches);
+
+  // (3) لو مفيش أي تطابق
+  if(!results.length){
+    return {
+      type:"unknown", source:"local",
+      title:"🤔 لم أتعرف على أعراض واضحة",
+      html:`<p style="line-height:1.9">لم أجد تطابقًا واضحًا مع قاعدة البيانات.<br><br><strong>جرّب:</strong><br>
+            • وصف الأعراض بتفصيل أكثر<br>• ذكر أماكن الألم (راس، بطن، صدر)<br>
+            • ذكر المدة (من امبارح، من أسبوع)<br>• ذكر أعراض مصاحبة (حرارة، قيء، تعب)</p>`
+    };
+  }
+
+  const best = results[0]; // أعلى احتمال
+  const confLevel = best.percent >= 70 ? "عالية" : best.percent >= 40 ? "متوسطة" : "منخفضة";
+  const confColor = best.percent >= 70 ? "#16a34a" : best.percent >= 40 ? "#d97706" : "#dc2626";
+  const isChild = patient.age !== null && patient.age < 12; // طفل؟ نخفي الجرعات للأمان
+
+  let html = "";
+
+  // بيانات المريض
+  if(patient.age !== null || patient.gender){
+    html += `<div class="patient-line">
+      ${patient.age !== null ? `<span class="pill">العمر: ${patient.age} سنة</span>` : ""}
+      ${patient.gender ? `<span class="pill">النوع: ${escapeHTML(patient.gender)}</span>` : ""}</div>`;
+  }
+
+  // أعلى 3 احتمالات مع دائرة الثقة
+  html += `<div class="section-h">🎯 الاحتمالات الأعلى ثقة</div>`;
+  results.slice(0,3).forEach((d,i) => {
+    const c = d.percent >= 70 ? "#16a34a" : d.percent >= 40 ? "#d97706" : "#dc2626";
+    const circ = 2 * Math.PI * 25;                       // محيط الدائرة
+    const offset = circ - (d.percent / 100) * circ;      // الجزء غير الممتلئ
+    html += `<div class="disease">
+      <div class="info"><b>${i+1}. ${d.name}</b><small>${d.dept}</small>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">تطابق ${d.matches} من ${d.symptoms.length} عرض</div></div>
+      <div class="ring"><svg width="58" height="58">
+        <circle cx="29" cy="29" r="25" fill="none" stroke="var(--border)" stroke-width="6"/>
+        <circle cx="29" cy="29" r="25" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/></svg>
+        <span style="color:${c}">${d.percent}%</span></div></div>`;
+  });
+
+  // الأعراض التي تم التعرف عليها
+  if(best.found.length){
+    html += `<div class="section-h">✅ الأعراض التي تم التعرف عليها في وصفك</div>
+             <div class="sym-chips">${best.found.map(s => `<span class="sym-chip">${s}</span>`).join("")}</div>`;
+  }
+
+  // الأدوية — للأطفال نكتفي بتنبيه
+  if(isChild){
+    html += `<div class="meds"><h4>👶 تنبيه للأطفال</h4>
+      <p style="font-size:13px">جرعات أدوية الأطفال تُحسب حسب الوزن والعمر ويحددها الطبيب أو الصيدلي فقط. لذلك لم نعرض أدوية محددة. راجع طبيب الأطفال.</p></div>`;
+  } else {
+    html += `<div class="meds"><h4>💊 أدوية شائعة لحالة «${best.name}»</h4>
+      <ul>${best.meds.map(m => `<li><div><b>${m.n}</b><br><small style="color:var(--muted)">${m.d}</small></div></li>`).join("")}</ul>
+      <small class="note">⚠️ الجرعات استرشادية للبالغين — يحدد الطبيب الجرعة النهائية، وتأكد من عدم وجود حساسية أو أمراض مزمنة.</small></div>`;
+  }
+
+  // التوصية والتخصص ومستوى الثقة
+  html += `<div class="advice"><strong>📌 التوصية الطبية:</strong><br>${best.advice}</div>
+    <div><span class="dept">👨‍⚕️ التخصص: ${best.dept}</span>
+    <span class="conf-text">مستوى الثقة: <b style="color:${confColor}">${confLevel}</b></span></div>`;
+
+  return { type:"normal", source:"local", title:`🔎 الاحتمال الأكبر: ${best.name}`, html };
+}
+
+/* ================================================================
+   [12] محرك الذكاء الاصطناعي (OpenAI / Gemini)
+================================================================ */
+async function aiDiagnose(text, patient){
+  // نص الطلب المرسل للنموذج (مع بيانات المريض لو متوفرة)
+  const prompt = `أنت مساعد طبي. حلل الأعراض التالية بأسلوب طبي دقيق:
+"${text}"
+${patient.age !== null ? "العمر: " + patient.age + " سنة" : ""} ${patient.gender ? "النوع: " + patient.gender : ""}
+
+قدم تقريرًا يشمل:
+1. الاحتمالات التشخيصية (الأكثر احتمالًا أولاً) مع نسبة ثقة مئوية
+2. الأعراض المطابقة لكل احتمال
+3. التخصص الطبي المقترح
+4. الأدوية المقترحة (استرشادية فقط) مع تحذير${patient.age !== null && patient.age < 12 ? " — المريض طفل: لا تذكر جرعات" : ""}
+5. توصيات طبية عامة
+6. علامات الخطر التي تستوجب الذهاب للطوارئ
+${imageData ? "7. تعليق مبدئي على الصورة المرفقة مع التنبيه أنه لا يغني عن رأي الطبيب" : ""}
+
+اكتب بالعربية بأسلوب منظم وواضح.`;
+
+  // ----- OpenAI -----
+  if(settings.provider === "openai"){
+    const userContent = imageData
+      ? [{type:"text", text:prompt}, {type:"image_url", image_url:{url:imageData.dataUrl}}] // نص + صورة
+      : prompt;
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + settings.apiKey },
+      body:JSON.stringify({
+        model: settings.model || "gpt-4o-mini",
+        messages:[
+          {role:"system", content:"أنت مساعد طبي ذكي. ردودك دقيقة ومنظمة بالعربية، وتذكّر دائمًا أن ردك استرشادي ولا يغني عن الطبيب."},
+          {role:"user", content:userContent}],
+        temperature:0.3
+      })
+    });
+    if(!resp.ok){ let d=""; try{ d=(await resp.json()).error?.message||""; }catch(e){} throw new Error("OpenAI: " + (d || resp.status)); }
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content || "لم يصل رد.";
+  }
+
+  // ----- Gemini -----
+  if(settings.provider === "gemini"){
+    const model = settings.model && settings.model.startsWith("gemini") ? settings.model : "gemini-2.5-flash";
+    const parts = [{text:prompt}];
+    if(imageData) parts.push({inline_data:{mime_type:imageData.mime, data:imageData.base64}}); // إضافة الصورة
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-goog-api-key":settings.apiKey }, // المفتاح في الهيدر لا الرابط
+      body:JSON.stringify({ contents:[{parts}] })
+    });
+    if(!resp.ok){ let d=""; try{ d=(await resp.json()).error?.message||""; }catch(e){} throw new Error("Gemini: " + (d || resp.status)); }
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "لم يصل رد.";
+  }
+  throw new Error("مزود غير محدد");
+}
+
+/* ================================================================
+   [13] عرض التقرير
+================================================================ */
+function displayResult(r){
+  const box = $("result");
+  const caseNo = "MD-" + Date.now().toString().slice(-6);                         // رقم حالة عشوائي
+  const when = new Date().toLocaleString("ar-EG", {dateStyle:"medium", timeStyle:"short"}); // التاريخ والوقت
+  const cls = r.source === "ai" ? "ai" : r.type;                                   // لون الشريط حسب النوع
+
+  box.innerHTML = `
+    <div class="report-head"><span>تقرير رقم #${caseNo}</span><span>${when}</span></div>
+    <div class="result-banner ${cls}">${r.title}</div>
+    ${r.html || ""}`;
+  box.style.display = "block";
+  $("emptyState").style.display = "none"; // نخفي الحالة الفارغة
+  box.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// أزرار الإجراءات أسفل التقرير (طباعة / استماع / نسخ)
+function appendActions(){
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  actions.innerHTML = `
+    <button class="btn" type="button" onclick="window.print()">🖨 طباعة</button>
+    <button class="btn" type="button" onclick="speakResult()">🔊 استماع</button>
+    <button class="btn" type="button" onclick="copyResult()">📋 نسخ</button>`;
+  $("result").appendChild(actions);
+}
+
+/* ================================================================
+   [14] زر التحليل الرئيسي
+================================================================ */
+async function runDiagnosis(){
+  if(listening) stopListening(); // نوقف التسجيل لو شغّال
+
+  const text = correctSpeechText($("symptoms").value.trim());
+  if(!text){ toast("⚠️ من فضلك اكتب وصف الأعراض أولاً", "error"); $("symptoms").focus(); return; }
+  const patient = getPatient();
+
+  const btn = $("diagnoseBtn");
+  btn.classList.add("loading");
+  btn.querySelector(".btn-text").textContent = "جاري التحليل...";
+  btn.disabled = true;
+
+  try {
+    let r;
+    const useAI = settings.provider && settings.provider !== "local" && settings.apiKey;
+    const local = localDiagnose(text, patient); // التشخيص المحلي دائمًا (للطوارئ والبديل)
+
+    if(local.type === "danger"){
+      r = local; // الطوارئ لها أولوية على أي شيء
+    } else if(useAI){
+      try {
+        const aiText = await aiDiagnose(text, patient);
+        r = { type:"normal", source:"ai", title:"🤖 تحليل الذكاء الاصطناعي",
+              html:`<div class="ai-text">${escapeHTML(aiText)}</div>` };
+      } catch(err){
+        console.warn("AI failed, using local", err);
+        r = local;
+        r.title = "⚠️ فشل الاتصال بالـ AI (" + escapeHTML(err.message) + ") — تم استخدام المحرك المحلي\n" + r.title;
+      }
+    } else r = local;
+
+    displayResult(r);
+    if(r.type === "normal") appendActions(); // الأزرار للنتائج الفعلية فقط
+
+    addToHistory({ symptoms:text, type:r.type, time:new Date().toISOString() });
+  } catch(e){
+    toast("⚠️ خطأ: " + e.message, "error");
+  } finally {
+    btn.classList.remove("loading");
+    btn.querySelector(".btn-text").textContent = "تحليل الحالة";
+    btn.disabled = false;
+  }
+}
+$("diagnoseBtn").addEventListener("click", runDiagnosis);
+
+// اختصار Ctrl+Enter للتحليل، و Esc لإغلاق النوافذ
+document.addEventListener("keydown", e => {
+  if((e.ctrlKey || e.metaKey) && e.key === "Enter") runDiagnosis();
+  if(e.key === "Escape") document.querySelectorAll(".modal-bg.show").forEach(m => m.classList.remove("show"));
+});
+
+/* ================================================================
+   [15] سجل الفحوصات
+================================================================ */
+const TYPE_COLOR = { normal:"#16a34a", danger:"#dc2626", unknown:"#94a3b8" }; // لون نقطة كل نوع
+
+function addToHistory(item){
+  history.unshift(item);                         // الأحدث أولاً
+  if(history.length > 50) history = history.slice(0, 50); // نحتفظ بآخر 50 فقط
+  try { localStorage.setItem("med_history", JSON.stringify(history)); } catch(e){}
+  renderHistory();
+}
+
+// صف واحد في السجل
+function historyRow(h, i, closeAfter){
+  return `<div class="h-item" onclick="loadFromHistory(${i});${closeAfter ? "closeHistory();" : ""}">
+    <span class="dot" style="background:${TYPE_COLOR[h.type] || "#94a3b8"}"></span>
+    <span class="txt">${escapeHTML(h.symptoms)}</span>
+    <span class="time">${formatTime(h.time)}</span></div>`;
+}
+
+function renderHistory(){
+  $("historyCount").textContent = history.length ? `(${history.length})` : "";
+  $("historyList").innerHTML = history.length
+    ? history.slice(0,6).map((h,i) => historyRow(h,i,false)).join("")
+    : `<div class="h-empty">لا يوجد فحوصات سابقة</div>`;
+}
+
+function loadFromHistory(i){
+  const h = history[i]; if(!h) return;
+  $("symptoms").value = h.symptoms;
+  baseText = h.symptoms;
+  updateCounter();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+// تحويل الوقت لصيغة "منذ ..."
+function formatTime(iso){
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if(diff < 60) return "الآن";
+  if(diff < 3600) return `منذ ${Math.floor(diff/60)}د`;
+  if(diff < 86400) return `منذ ${Math.floor(diff/3600)}س`;
+  return new Date(iso).toLocaleDateString("ar-EG");
+}
+
+function openHistory(){
+  $("historyModal").classList.add("show");
+  $("fullHistory").innerHTML = history.length
+    ? history.map((h,i) => historyRow(h,i,true)).join("")
+    : `<div class="h-empty">لا يوجد فحوصات</div>`;
+}
+function closeHistory(){ $("historyModal").classList.remove("show"); }
+async function clearHistory(){
+  if(!(await askConfirm("هل تريد مسح كل السجل نهائيًا؟", "نعم، امسح"))) return;
+  history = [];
+  localStorage.removeItem("med_history");
+  renderHistory(); closeHistory();
+  toast("تم مسح السجل", "success");
+}
+
+/* ================================================================
+   [16] الإعدادات
+================================================================ */
+function openSettings(){
+  $("settingsModal").classList.add("show");
+  $("aiProvider").value = settings.provider || "local";
+  $("apiKey").value = settings.apiKey || "";
+  $("gptModel").value = settings.model || "";
+}
+function closeSettings(){ $("settingsModal").classList.remove("show"); }
+function saveSettings(){
+  settings.provider = $("aiProvider").value;
+  settings.apiKey = $("apiKey").value.trim();
+  settings.model = $("gptModel").value.trim();
+  try { localStorage.setItem("med_settings", JSON.stringify(settings)); } catch(e){}
+  updateAIStatus(); closeSettings();
+  toast("✅ تم حفظ الإعدادات", "success");
+}
+
+/* ================================================================
+   [17] الوضع الليلي
+================================================================ */
+function toggleTheme(){
+  document.body.classList.toggle("dark");
+  const dark = document.body.classList.contains("dark");
+  $("themeBtn").textContent = dark ? "☀️" : "🌙";
+  try { localStorage.setItem("med_theme", dark ? "dark" : "light"); } catch(e){}
+}
+if(localStorage.getItem("med_theme") === "dark"){ document.body.classList.add("dark"); $("themeBtn").textContent = "☀️"; }
+
+/* ================================================================
+   [18] قراءة التقرير بصوت عالٍ + نسخه
+================================================================ */
+// نص التقرير بدون أزرار الإجراءات
+function reportText(){
+  const clone = $("result").cloneNode(true);
+  clone.querySelectorAll(".actions").forEach(el => el.remove());
+  return clone.innerText;
+}
+function speakResult(){
+  if(!("speechSynthesis" in window)){ toast("المتصفح لا يدعم النطق", "error"); return; }
+  const text = reportText().replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F\u200D]/gu,"").replace(/\s+/g," ").trim(); // حذف الإيموجي
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ar-EG"; u.rate = 0.9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function copyResult(){
+  if(!navigator.clipboard){ toast("تعذر النسخ", "error"); return; }
+  navigator.clipboard.writeText(reportText()).then(() => toast("✅ تم نسخ التقرير", "success")).catch(() => toast("تعذر النسخ", "error"));
+}
+
+/* ================================================================
+   [19] أدوات سريعة
+================================================================ */
+// تحديث عداد الحروف
+function updateCounter(){ $("charCount").textContent = $("symptoms").value.length + " / 1000"; }
+
+async function clearSymptoms(){
+  if($("symptoms").value && !(await askConfirm("هل تريد مسح النص المكتوب؟", "مسح"))) return;
+  $("symptoms").value = ""; baseText = ""; interimText = "";
+  $("result").style.display = "none"; $("emptyState").style.display = "block";
+  updateCounter();
+}
+function insertExample(){
+  $("symptoms").value = "نفوخي بيوجعني من امبارح، وجسمي حار، وبحس إني هترجع، وبطني بتقولي";
+  baseText = $("symptoms").value; updateCounter();
+}
+
+// بناء شرائح الأعراض السريعة: الضغط يضيف العرض للنص لو غير موجود
+$("quickChips").innerHTML = QUICK_SYMPTOMS.map(s => `<button type="button" class="chip" data-s="${s}">+ ${s}</button>`).join("");
+$("quickChips").addEventListener("click", e => {
+  const s = e.target.dataset?.s; if(!s) return;
+  const cur = $("symptoms").value;
+  if(!cur.includes(s)) $("symptoms").value = joinText(cur, s);
+  if(listening) baseText = $("symptoms").value.trim();
+  updateCounter();
+});
+
+// إغلاق النوافذ بالضغط على الخلفية
+document.querySelectorAll(".modal-bg").forEach(m => m.addEventListener("click", e => { if(e.target === m) m.classList.remove("show"); }));
+
+// زر رفع الصورة يعمل أيضًا بالكيبورد (Enter)
+document.querySelector(".upload").addEventListener("keydown", e => { if(e.key === "Enter") $("fileInput").click(); });
+
+/* ================================================================
+   [20] التشغيل الأول
+================================================================ */
+updateAIStatus();
+renderHistory();
+updateCounter();
+</script>
+</body>
+</html>
